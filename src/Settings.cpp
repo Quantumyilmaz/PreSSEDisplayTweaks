@@ -1,10 +1,9 @@
 #include "Settings.h"
+#include "Utils.h"
+#include "SimpleIni.h"
 
-namespace Settings {
-    inline float ratio = 1.0f;
-};
 
-void GetINISettings() {
+void Settings::GetINISettings() {
     // We have one section called [Settings] and just one key called "fRatio" with value 1.0
 
     // first make sure the INI file exists
@@ -27,8 +26,8 @@ void GetINISettings() {
     ini.SetUnicode();
     ini.LoadFile(std::format("Data/SKSE/Plugins/{}.ini", Utilities::mod_name).c_str());
 
-    const float new_ratio = ini.GetDoubleValue("Settings", "fRatio", Settings::ratio);
-    Settings::ratio = std::min(std::max(new_ratio, 0.1f), 1.0f);
+    const float new_ratio = static_cast<float>(ini.GetDoubleValue("Settings", "fRatio", Settings::ratio));
+    Settings::ratio = std::min(std::max(new_ratio, ratio_min), ratio_max);
     logger::info("fRatio: {}", Settings::ratio);
 
     // write the value back to the INI file
@@ -38,7 +37,7 @@ void GetINISettings() {
 
     logger::info("INI file updated.");
 }
-void ReadWriteDisplayTweaksINI()
+void Settings::ReadWriteDisplayTweaksINI()
 {   
 	if (std::filesystem::exists(Utilities::display_tweaks_custom_ini)) {
 		logger::info("SSEDisplayTweaks_custom.ini exists.");
@@ -52,8 +51,7 @@ void ReadWriteDisplayTweaksINI()
 	logger::info("SSEDisplayTweaks.ini does not exist.");
 	return;
 };
-
-void ReadWriteDisplayTweaksINI(const char* filepath) {
+void Settings::ReadWriteDisplayTweaksINI(const char* filepath) {
     // first make sure the INI file exists
     CSimpleIniA ini;
     ini.SetUnicode();
@@ -66,8 +64,8 @@ void ReadWriteDisplayTweaksINI(const char* filepath) {
     logger::info("Ratio: {}", Settings::ratio);
 
     // apply the ratio to the display resolution
-    displayWidth = displayWidth * Settings::ratio;
-    displayHeight = displayHeight * Settings::ratio;
+    displayWidth = static_cast<int>(displayWidth * Settings::ratio);
+    displayHeight = static_cast<int>(displayHeight * Settings::ratio);
 
     const auto windows_resolution = fmt::format("{}x{}", displayWidth, displayHeight);
     
